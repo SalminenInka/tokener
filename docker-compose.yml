@@ -6,8 +6,9 @@ services:
     ports:
       - "40000:8080"
     environment:
-      PORT: 8080,
-      DEBUG: app, app:*,
+      PORT: 8080
+      DEBUG: app, app:*
+      PRIVATE_KEY: './private-key.pem'
       ISS: tokener
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/status"]

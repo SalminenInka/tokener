@@ -1,16 +1,19 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { readFileSync } from 'fs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { hostname } from 'os';
 import { version } from 'typescript';
-const debug: NodeRequire = require('debug')('app');
+import debugRaw from 'debug';
+
+const debug = debugRaw('app');
 const app = express();
-const fileName = './private-key.pem';
-const contents = readFileSync(fileName, 'utf-8');
+const privateKey = readFileSync(process.env.PRIVATE_KEY!, 'utf-8');
 
 app.use(express.json());
 
-const simpleHealthCheck = (version: string) => {
+type HealthCheck = (version: string) => (req: Request, res: Response ) => void
+
+const simpleHealthCheck: HealthCheck = (version) => {
   return (req: Request, res: Response) => {
     const { userCPUTime, systemCPUTime } = process.resourceUsage();
     const {
@@ -39,9 +42,17 @@ interface PostRequest<T = any> extends Request {
 }
 
 app.post('/tokens', (req: PostRequest, res: Response) => {
-  const token = jwt.sign(req.body, contents, { algorithm: 'RS256', expiresIn: '1h', issuer: process.env.ISS });
-  res.json(token);
-  console.log(req.body);
+  const payload = {
+    iss: process.env.ISS,
+    ...req.body,
+  }
+  const expiresIn = (req.query.expiresIn ?? '1h') as string;
+  const options: SignOptions = {
+    algorithm: 'RS256',
+    expiresIn
+  };
+  const token = jwt.sign(payload, privateKey, options);
+  res.json({ token });
 })
 
 app.get('/status', simpleHealthCheck(version));

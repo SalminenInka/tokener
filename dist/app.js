@@ -8,10 +8,10 @@ const fs_1 = require("fs");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const os_1 = require("os");
 const typescript_1 = require("typescript");
-const debug = require('debug')('app');
+const debug_1 = __importDefault(require("debug"));
+const debug = (0, debug_1.default)('app');
 const app = (0, express_1.default)();
-const fileName = './private-key.pem';
-const contents = (0, fs_1.readFileSync)(fileName, 'utf-8');
+const privateKey = (0, fs_1.readFileSync)(process.env.PRIVATE_KEY, 'utf-8');
 app.use(express_1.default.json());
 const simpleHealthCheck = (version) => {
     return (req, res) => {
@@ -31,9 +31,17 @@ const simpleHealthCheck = (version) => {
     };
 };
 app.post('/tokens', (req, res) => {
-    const token = jsonwebtoken_1.default.sign(req.body, contents, { algorithm: 'RS256', expiresIn: '1h', issuer: process.env.ISS });
-    res.json(token);
-    console.log(req.body);
+    const payload = {
+        iss: process.env.ISS,
+        ...req.body,
+    };
+    const expiresIn = (req.query.expiresIn ?? '1h');
+    const options = {
+        algorithm: 'RS256',
+        expiresIn
+    };
+    const token = jsonwebtoken_1.default.sign(payload, privateKey, options);
+    res.json({ token });
 });
 app.get('/status', simpleHealthCheck(typescript_1.version));
 // here is the code
