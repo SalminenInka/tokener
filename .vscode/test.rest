@@ -1,0 +1,12 @@
+@name createToken
+###
+POST http://localhost:8080/tokens?expiresIn=1h
+Content-Type: application/json
+
+{
+  "sub": "salmiin",
+  "aud": "tokener"
+}
+###
+GET http://localhost:8080/status
+Content-Type: application/json

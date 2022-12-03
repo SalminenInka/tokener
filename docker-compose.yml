@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  application:
+    image: "localhost:6000/tokens:latest"
+    ports:
+      - "40000:8080"
+    environment:
+      PORT: 8080,
+      DEBUG: app, app:*,
+      ISS: tokener
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
