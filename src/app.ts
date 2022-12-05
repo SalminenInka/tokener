@@ -4,14 +4,28 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { hostname } from 'os';
 import { version } from 'typescript';
 import debugRaw from 'debug';
+import Ajv from "ajv";
 
 const debug = debugRaw('app');
 const app = express();
 const privateKey = readFileSync(process.env.PRIVATE_KEY!, 'utf-8');
-
+const ajv = new Ajv({allErrors: true})
+const schema = {
+  type: "object",
+  properties: {
+    sub: {type: "string"},
+    aud: {type: "string"},
+    iss: { type: "string" }
+  },
+  required: ["sub", "aud", "iss"],
+  additionalProperties: true,
+}
 app.use(express.json());
-
+const validate = ajv.compile(schema)
 type HealthCheck = (version: string) => (req: Request, res: Response ) => void
+
+
+
 
 const simpleHealthCheck: HealthCheck = (version) => {
   return (req: Request, res: Response) => {
@@ -51,8 +65,19 @@ app.post('/tokens', (req: PostRequest, res: Response) => {
     algorithm: 'RS256',
     expiresIn
   };
-  const token = jwt.sign(payload, privateKey, options);
-  res.json({ token });
+  function test(data: { sub?: string; aud?: string; iss?: string; }) {
+    const valid = validate(data)
+    if (valid) {
+       debug("Valid payload, have a token.");
+       debug(payload);
+    } else if (!valid) {
+      debug("No token for you, invalid payload: " + ajv.errorsText(validate.errors));
+      return;
+    }
+    const token = jwt.sign(payload, privateKey, options);
+    res.json({ token });
+  }
+  test(payload);
 })
 
 app.get('/status', simpleHealthCheck(version));
@@ -70,5 +95,6 @@ process.on('SIGTERM', () => {
     debug('HTTP server closed');
   });
 });
+
 
 

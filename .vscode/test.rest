@@ -1,21 +1,12 @@
-@name createToken
-###
-POST http://localhost:8080/tokens?expiresIn=1h
+# @name createToken
+POST http://localhost:40000/tokens?expiresIn=1h
 Content-Type: application/json
+Authorization: Bearer {{createToken.response.body.$.token}}
 
 {
   "sub": "salmiin",
-  "aud": "tokener",
+  "aud": "terminal-sherminal",
   "iss": "PacinTokenPalvelu"
-}
-
-###
-POST http://localhost:8080/tokens?expiresIn=1h
-Content-Type: application/json
-
-{
-  "sub": "salmiin",
-  "aud": "tokener"
 }
 
 ###

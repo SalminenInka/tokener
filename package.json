@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/SalminenInka/tokener#readme",
   "dependencies": {
+    "ajv": "^8.11.2",
     "debug": "^4.3.4",
     "express": "^4.18.2",
     "express-jwt": "^7.7.7",
